@@ -25,7 +25,11 @@ export function ProviderDashboard({ onNavigate, onSelectListing }: Props) {
       .finally(() => setLoading(false));
   }, [profile]);
 
-  const activeListings = listings.filter((l) => !['COMPLETED', 'CANCELLED'].includes(l.status));
+  const activeListings = listings.filter(
+    (l) =>
+      !['COMPLETED', 'CANCELLED'].includes(l.status) &&
+      new Date(l.available_until).getTime() >= Date.now(),
+  );
   const completedCount = listings.filter((l) => l.status === 'COMPLETED').length;
   const mealsRescued = listings.filter((l) => l.status === 'COMPLETED').reduce((s, l) => s + l.quantity, 0);
 

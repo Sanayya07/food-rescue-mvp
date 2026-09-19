@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Package, Plus } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-import { PageHeader, EmptyState, Spinner } from '@/components/ui';
+import { PageHeader, EmptyState, Spinner, ErrorBanner } from '@/components/ui';
 import { FoodCard } from '@/components/FoodCard';
-import { fetchProviderListings } from '@/lib/listings';
+import { fetchProviderListings, updateListingStatus } from '@/lib/listings';
 import type { FoodListing, ListingStatus } from '@/lib/types';
 import type { PageId } from '@/components/AppLayout';
 
@@ -28,16 +28,39 @@ export function ProviderListings({ onNavigate, onSelectListing }: Props) {
   const [listings, setListings] = useState<FoodListing[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | ListingStatus>('all');
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [cancelError, setCancelError] = useState<string | null>(null);
+
+  const loadListings = () => {
+    if (!profile) return Promise.resolve();
+    return fetchProviderListings(profile.id).then(setListings);
+  };
 
   useEffect(() => {
-    if (!profile) return;
-    fetchProviderListings(profile.id)
-      .then(setListings)
+    loadListings()
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [profile]);
 
-  const filtered = filter === 'all' ? listings : listings.filter((l) => l.status === filter);
+  const handleCancel = async (listingId: string) => {
+    setCancellingId(listingId);
+    setCancelError(null);
+    try {
+      await updateListingStatus(listingId, 'CANCELLED');
+      await loadListings();
+    } catch (err) {
+      setCancelError(err instanceof Error ? err.message : 'Failed to cancel listing.');
+    } finally {
+      setCancellingId(null);
+    }
+  };
+
+  const filtered = filter === 'all'
+    ? listings
+    : listings.filter((l) => {
+        const expired = new Date(l.available_until).getTime() < Date.now();
+        return l.status === filter && !(filter === 'AVAILABLE' && expired);
+      });
 
   return (
     <div>
@@ -51,6 +74,8 @@ export function ProviderListings({ onNavigate, onSelectListing }: Props) {
           </button>
         }
       />
+
+      {cancelError && <div className="mb-4"><ErrorBanner message={cancelError} /></div>}
 
       <div className="flex flex-wrap gap-2 mb-5">
         {filters.map((f) => (
@@ -85,7 +110,15 @@ export function ProviderListings({ onNavigate, onSelectListing }: Props) {
       ) : (
         <div className="grid sm:grid-cols-2 gap-4">
           {filtered.map((l) => (
-            <FoodCard key={l.id} listing={l} onClick={() => onSelectListing(l.id)} ctaLabel="Manage" />
+            <FoodCard
+              key={l.id}
+              listing={l}
+              onClick={() => onSelectListing(l.id)}
+              ctaLabel="Manage"
+              showExpiredStatus
+              onCancel={l.status === 'AVAILABLE' ? () => handleCancel(l.id) : undefined}
+              cancelLoading={cancellingId === l.id}
+            />
           ))}
         </div>
       )}

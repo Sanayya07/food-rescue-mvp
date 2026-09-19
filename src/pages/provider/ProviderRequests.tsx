@@ -99,7 +99,7 @@ export function ProviderRequests() {
                   const ngo = ngos[req.ngo_id];
                   const listing = listings[req.listing_id];
                   const distance = listing && ngo?.location_lat != null
-                    ? haversineKm(listing.pickup_lat, listing.pickup_lng, ngo.location_lat, ngo.location_lat)
+                    ? haversineKm(listing.pickup_lat, listing.pickup_lng, ngo.location_lat, ngo.location_lng)
                     : undefined;
                   return (
                     <RequestRow

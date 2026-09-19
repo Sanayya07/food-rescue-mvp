@@ -3,10 +3,20 @@ import { Package, ArrowLeft, Mail, Lock, Eye, EyeOff, User as UserIcon, Building
 import type { Role } from '@/lib/types';
 
 interface Props {
-  onSignUp: (email: string, password: string) => Promise<void>;
+  onSignUp: (email: string, password: string, profile: SignUpProfile) => Promise<void>;
   onBack: () => void;
   onSwitchToLogin: () => void;
   selectedRole: Role;
+}
+
+export interface SignUpProfile {
+  role: Role;
+  name: string;
+  orgName: string | null;
+  phone: string | null;
+  locationLabel: string;
+  lat: number;
+  lng: number;
 }
 
 const roleMeta: Record<Role, { emoji: string; label: string; desc: string; namePlaceholder: string; orgLabel: string; orgOptional: boolean }> = {
@@ -69,7 +79,16 @@ export function SignUpPage({ onSignUp, onBack, onSwitchToLogin, selectedRole }: 
     }
     setLoading(true);
     try {
-      await onSignUp(email, password);
+      const location = locationPresets.find((loc) => loc.label === locationLabel)!;
+      await onSignUp(email, password, {
+        role: selectedRole,
+        name,
+        orgName: orgName || null,
+        phone: phone || null,
+        locationLabel,
+        lat: location.lat,
+        lng: location.lng,
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Sign up failed. Please try again.');
     } finally {

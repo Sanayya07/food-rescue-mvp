@@ -193,6 +193,20 @@ export function FoodDetailsPage({ listingId, onBack, onRequestComplete }: Props)
               <>
                 <h3 className="font-semibold text-ink-900 mb-1">Request this food</h3>
                 <p className="text-sm text-ink-500 mb-4">Specify how many portions your community needs.</p>
+                <div className="mb-4 rounded-xl bg-brand-50 border border-brand-100 px-4 py-3">
+  <div className="flex items-start gap-2.5">
+    <span className="text-lg">🚚</span>
+    <div>
+      <p className="text-sm font-semibold text-brand-800">
+        Volunteer delivery
+      </p>
+      <p className="text-xs text-brand-700 mt-0.5">
+        A volunteer will collect the food from the provider and deliver it
+        to your organization after the request is accepted.
+      </p>
+    </div>
+  </div>
+</div>
 
                 {error && <div className="mb-3"><ErrorBanner message={error} /></div>}
 

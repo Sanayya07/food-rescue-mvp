@@ -53,7 +53,7 @@ export async function acceptPickup(pickupId: string, volunteerId: string): Promi
     .eq('id', pickupId)
     .eq('status', 'open');
   if (error) throw error;
-
+   
   // Update listing to PICKUP_ASSIGNED
   const { data: pickup, error: pErr } = await supabase
     .from('pickups')

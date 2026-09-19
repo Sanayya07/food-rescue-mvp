@@ -11,6 +11,9 @@ interface Props {
   match?: { level: MatchLevel; reason: string };
   onClick?: () => void;
   ctaLabel?: string;
+  showExpiredStatus?: boolean;
+  onCancel?: () => void;
+  cancelLoading?: boolean;
 }
 
 const foodTypeEmoji: Record<string, string> = {
@@ -23,7 +26,7 @@ const foodTypeEmoji: Record<string, string> = {
   Beverages: '🥤',
 };
 
-export function FoodCard({ listing, distanceKm, match, onClick, ctaLabel = 'View Details' }: Props) {
+export function FoodCard({ listing, distanceKm, match, onClick, ctaLabel = 'View Details', showExpiredStatus = false, onCancel, cancelLoading = false }: Props) {
   const expired = new Date(listing.available_until).getTime() < Date.now();
   const emoji = foodTypeEmoji[listing.food_type] ?? '🍱';
 
@@ -47,7 +50,11 @@ export function FoodCard({ listing, distanceKm, match, onClick, ctaLabel = 'View
             </p>
           </div>
         </div>
-        <ListingStatusBadge status={listing.status} />
+        {expired && showExpiredStatus ? (
+          <span className="badge bg-red-100 text-red-700">Expired</span>
+        ) : (
+          <ListingStatusBadge status={listing.status} />
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-y-2.5 gap-x-3 text-sm mb-4">
@@ -74,9 +81,22 @@ export function FoodCard({ listing, distanceKm, match, onClick, ctaLabel = 'View
         ) : (
           <span className="text-xs text-ink-400 truncate">{listing.pickup_location_label}</span>
         )}
-        {onClick && (
-          <span className="text-sm font-semibold text-brand-600 shrink-0">{ctaLabel} →</span>
-        )}
+        <div className="flex items-center gap-3 shrink-0">
+          {onCancel && (
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                onCancel();
+              }}
+              disabled={cancelLoading}
+              className="text-xs font-semibold text-red-600 hover:text-red-700 disabled:opacity-50"
+            >
+              {cancelLoading ? 'Cancelling...' : 'Cancel'}
+            </button>
+          )}
+          {onClick && <span className="text-sm font-semibold text-brand-600">{ctaLabel} →</span>}
+        </div>
       </div>
     </div>
   );
